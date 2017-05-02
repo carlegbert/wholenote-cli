@@ -21,6 +21,7 @@ class WholenoteCredentials(object):
         data = res.json()
         print(data)
         self.access_token = data['access_token']
+        self.email = data['email']
 
 
 def construct_basic_header(email, password):

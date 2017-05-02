@@ -7,5 +7,5 @@ class AuthFailException(Exception):
     from the failed request."""
 
     def __init__(self, errmsg, status_code):
-        self.errmgs = errmsg
+        self.errmsg = errmsg
         self.status_code = status_code
