@@ -1,27 +1,10 @@
 from base64 import b64encode
 from os import path
-from app.exceptions import AuthFailException
 
 import requests
+import click
 
-
-class WholenoteCredentials(object):
-    """Class encapsulating authentication information"""
-
-    def __init__(self, refresh_token, access_token=None, email=None):
-        self.refresh_token = refresh_token
-        if not access_token:
-            self.get_access_token()
-
-    def get_access_token(self):
-        """Send refresh request to server and retrieve access token"""
-        header = construct_bearer_header(self.refresh_token)
-        res = requests.post('https://wholenoteapp.com/api/v1.0/refresh',
-                            headers=header)
-        data = res.json()
-        print(data)
-        self.access_token = data['access_token']
-        self.email = data['email']
+from app.exceptions import AuthFailException
 
 
 def construct_basic_header(email, password):
@@ -37,9 +20,19 @@ def construct_bearer_header(tkn):
 
 
 def read_refresh_token():
-    """Read refresh token from ~/.wncli. Later I will change where the token is
-    stored..."""
-    p = path.expanduser('~/.wncli')
+    """Read refresh token from ~/.wnre"""
+    p = path.expanduser('~/.wnre')
+    try:
+        with open(p, 'r') as f:
+            tkn = f.readline()
+            return tkn
+    except FileNotFoundError:
+        return None
+
+
+def read_access_token():
+    """Read access token from ~/.wnac"""
+    p = path.expanduser('~/.wnac')
     try:
         with open(p, 'r') as f:
             tkn = f.readline()
@@ -49,16 +42,24 @@ def read_refresh_token():
 
 
 def write_refresh_token(rtkn):
-    """Read refresh token from ~/.wncli. Later I will change where the token is
-    stored..."""
-    p = path.expanduser('~/.wncli')
+    """Read refresh token from ~/.wnre"""
+    p = path.expanduser('~/.wnre')
     with open(p, 'w+') as f:
         f.write(rtkn)
 
 
-def login_request(email, password):
-    """Send login request and return WholenoteCredentials object on success.
-    Raise exceptions on failure."""
+def write_access_token(atkn):
+    """Read access token from ~/.wnac"""
+    p = path.expanduser('~/.wnac')
+    with open(p, 'w+') as f:
+        f.write(atkn)
+
+
+def login_request():
+    """Send login request and return WholenoteCredentials object on
+    success. Raise exception on failure."""
+    email = click.prompt('email')
+    password = click.prompt('password', hide_input=True)
     header = construct_basic_header(email, password)
     res = requests.post('https://wholenoteapp.com/api/v1.0/login',
                         headers=header)
@@ -67,10 +68,23 @@ def login_request(email, password):
         rtkn = data['refresh_token']
         atkn = data['access_token']
         write_refresh_token(rtkn)
-        return WholenoteCredentials(rtkn, atkn, email)
+        write_access_token(atkn)
+        return atkn
     else:
-        err = data['error']
-        status_code = res.status_code
-        raise AuthFailException(err, status_code)
-        # raise exception
-        return
+        raise AuthFailException(data['error'], res.status_code)
+
+
+def refresh_request():
+    """Use refresh token to get useable access token."""
+    click.echo('Access token timed out... making refresh request')
+    rtkn = read_refresh_token()
+    header = construct_bearer_header(rtkn)
+    res = requests.post('https://wholenoteapp.com/api/v1.0/refresh',
+                        headers=header)
+    data = res.json()
+    if res.status_code == 200:
+        atkn = data['access_token']
+        write_access_token(atkn)
+        return atkn
+    else:
+        raise AuthFailException('Error getting access token', res.status_code)

@@ -9,3 +9,4 @@ class AuthFailException(Exception):
     def __init__(self, errmsg, status_code):
         self.errmsg = errmsg
         self.status_code = status_code
+        self.pretty_message = '{0}: {1}'.format(status_code, errmsg)

@@ -1,59 +1,63 @@
 import click
 from app.auth import login_request
-
-
-@click.command()
-@click.option('--email', prompt='email')
-@click.option('--password', prompt='password', hide_input=True)
-def login(email, password):
-    click.echo('Attempting login for {}...'.format(email))
-    return login_request(email, password)
+from app.exceptions import AuthFailException
+from app.note import get_notes
 
 
 @click.group()
 def cli():
+    """entry point"""
     pass
 
 
 @click.command()
 def list():
-    click.echo('<list all notes>')
+    try:
+        atkn = login_request()
+        notes = get_notes(atkn)
+        click.echo('{0} notes retrieved:'.format(len(notes)))
+        for n in notes:
+            click.echo('  ' + n['title'])
+    except AuthFailException as ex:
+        click.echo(ex.pretty_message)
 
 
 @click.command()
-def detail():
-    click.echo('<list contents of single note>')
+@click.argument('title')
+def detail(title):
+    click.echo('<list contents of single note with title "{}">'.format(title))
 
 
 @click.command()
-def delete():
-    click.echo('<delete single note>')
+@click.argument('title')
+def delete(title):
+    click.echo('<delete note with title "{}">'.format(title))
 
 
 @click.command()
-def append():
-    click.echo('<append content to single note>')
+@click.argument('title')
+@click.argument('content')
+@click.option('--append', is_flag=True)
+@click.option('--prepend', is_flag=True)
+def write(title, content, append, prepend):
+    if append and prepend:
+        click.echo("can't append and prepend")
+    elif append:
+        click.echo('<append to note>')
+    elif prepend:
+        click.echo('<prepend to note>')
+    else:
+        click.echo('<replace contents of single note>')
 
 
 @click.command()
-def prepend():
-    click.echo('<prepend content to single note>')
-
-
-@click.command()
-def write():
-    click.echo('<replace contents of single note>')
-
-
-@click.command()
-def edit():
-    click.echo('<open a note with $EDITOR and save it when that proccess ends')
+@click.argument('title')
+def edit(title):
+    click.echo('<open a note with $EDITOR and save it when that process ends')
 
 
 cli.add_command(list)
 cli.add_command(detail)
 cli.add_command(delete)
-cli.add_command(append)
-cli.add_command(prepend)
 cli.add_command(write)
 cli.add_command(edit)
