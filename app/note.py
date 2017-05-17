@@ -78,7 +78,7 @@ def get_notes(access_token, refresh_count=0):
         click.echo('{0}: {1}'.format(res.status_code, data['msg']))
 
 
-def note_detail(access_token, title_id, refresh_count=0):
+def get_note(access_token, title_id, refresh_count=0):
     """Get Note object from server"""
     header = construct_bearer_header(access_token)
     url = 'https://wholenoteapp.com/api/v1.0/notes/' + title_id

@@ -1,7 +1,7 @@
 import click
 from app.auth import access_token_required
 from app.note import (
-        note_detail,
+        get_note,
         get_notes,
         delete_note,
     )
@@ -26,7 +26,7 @@ def list(access_token):
 @click.argument('title')
 @access_token_required
 def detail(access_token, title):
-    note = note_detail(access_token, title)
+    note = get_note(access_token, title)
     note.display()
 
 
@@ -39,25 +39,37 @@ def delete(access_token, title):
 
 @click.command()
 @click.argument('title')
-@click.argument('content')
 @click.option('--append', is_flag=True)
 @click.option('--prepend', is_flag=True)
-def write(title, content, append, prepend):
+@click.argument('content')
+@access_token_required
+def write(access_token, title, content, append, prepend):
     if append and prepend:
         click.echo("can't append and prepend")
-    elif append:
-        click.echo('<append to note>')
+        return
+
+    note = get_note(access_token, title)
+    old_text = note.text
+
+    if append:
+        note.text += '\n' + content
     elif prepend:
-        click.echo('<prepend to note>')
+        note.text = content + '\n' + note.text
     else:
-        click.echo('<replace contents of single note>')
+        note.text = content
+
+    if note.text != old_text:
+        note.update(access_token)
+        click.echo('Note updated')
+    else:
+        click.echo('Note not updated (no changes made)')
 
 
 @click.command()
 @click.argument('title')
 @access_token_required
 def edit(access_token, title):
-    note = note_detail(access_token, title)
+    note = get_note(access_token, title)
     edited = note.open_in_editor()
     if edited:
         note.update(access_token)
