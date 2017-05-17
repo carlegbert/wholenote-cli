@@ -56,3 +56,21 @@ def note_detail(access_token, title_id, refresh_count=0):
         return get_notes({access_token: access_token}, refresh_count)
     else:
         click.echo('{0}: {1}'.format(res.status_code, data['msg']))
+
+
+def delete_note(access_token, title_id, refresh_count=0):
+    """Delete note from server"""
+    header = construct_bearer_header(access_token)
+    url = 'https://wholenoteapp.com/api/v1.0/notes/' + title_id
+    res = requests.delete(url, headers=header)
+    data = res.json()
+    if res.status_code == 200:
+        click.echo('Note {0} deleted.'.format(title_id))
+    elif refresh_count > 3:
+        click.echo('Error authenticating token. You may need to log in again.')
+    elif res.status_code == 422:
+        access_token = refresh_request()
+        refresh_count += 1
+        return get_notes({access_token: access_token}, refresh_count)
+    else:
+        click.echo('{0}: {1}'.format(res.status_code, data['msg']))

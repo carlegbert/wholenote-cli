@@ -1,6 +1,10 @@
 import click
 from app.auth import access_token_required
-from app.note import get_notes, note_detail
+from app.note import (
+        note_detail,
+        get_notes,
+        delete_note,
+    )
 
 
 @click.group()
@@ -28,8 +32,9 @@ def detail(access_token, title):
 
 @click.command()
 @click.argument('title')
-def delete(title):
-    click.echo('<delete note with title "{}">'.format(title))
+@access_token_required
+def delete(access_token, title):
+    delete_note(access_token, title)
 
 
 @click.command()
