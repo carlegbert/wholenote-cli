@@ -1,7 +1,6 @@
 import click
 from app.auth import access_token_required
-from app.exceptions import AuthFailException
-from app.note import get_notes
+from app.note import get_notes, note_detail
 
 
 @click.group()
@@ -13,19 +12,18 @@ def cli():
 @click.command()
 @access_token_required
 def list(access_token):
-    try:
-        notes = get_notes(access_token)
-        click.echo('{0} notes retrieved:'.format(len(notes)))
-        for n in notes:
-            click.echo('  ' + n['title'])
-    except AuthFailException as ex:
-        click.echo(ex.pretty_message)
+    notes = get_notes(access_token)
+    click.echo('{0} notes retrieved:'.format(len(notes)))
+    for n in notes:
+        click.echo('  ' + n.title_id)
 
 
 @click.command()
 @click.argument('title')
-def detail(title):
-    click.echo('<list contents of single note with title "{}">'.format(title))
+@access_token_required
+def detail(access_token, title):
+    note = note_detail(access_token, title)
+    note.display()
 
 
 @click.command()

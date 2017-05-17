@@ -61,6 +61,7 @@ def login_request():
     success. Raise exception on failure."""
     email = click.prompt('email')
     password = click.prompt('password', hide_input=True)
+    click.echo('+'*20)
     header = construct_basic_header(email, password)
     res = requests.post('https://wholenoteapp.com/api/v1.0/login',
                         headers=header)
@@ -72,7 +73,7 @@ def login_request():
         write_access_token(access_token)
         return access_token
     else:
-        raise AuthFailException(data['error'], res.status_code)
+        raise AuthFailException(data['msg'], res.status_code)
 
 
 def access_token_required(f):
@@ -80,10 +81,9 @@ def access_token_required(f):
     def decorated_function(*args, **kwargs):
         try:
             access_token = login_request()
-            return f(access_token)
+            return f(access_token, *args, **kwargs)
         except AuthFailException as ex:
-            errmsg = '{}: {}'.format(ex.status_code, ex.msg)
-            click.echo(errmsg)
+            click.echo(ex.pretty_message)
 
     return decorated_function
 
