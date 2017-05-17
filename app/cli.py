@@ -1,5 +1,5 @@
 import click
-from app.auth import login_request
+from app.auth import access_token_required
 from app.exceptions import AuthFailException
 from app.note import get_notes
 
@@ -11,10 +11,10 @@ def cli():
 
 
 @click.command()
-def list():
+@access_token_required
+def list(access_token):
     try:
-        atkn = login_request()
-        notes = get_notes(atkn)
+        notes = get_notes(access_token)
         click.echo('{0} notes retrieved:'.format(len(notes)))
         for n in notes:
             click.echo('  ' + n['title'])

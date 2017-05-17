@@ -1,4 +1,5 @@
 from base64 import b64encode
+from functools import wraps
 from os import path
 
 import requests
@@ -48,11 +49,11 @@ def write_refresh_token(rtkn):
         f.write(rtkn)
 
 
-def write_access_token(atkn):
+def write_access_token(access_token):
     """Read access token from ~/.wnac"""
     p = path.expanduser('~/.wnac')
     with open(p, 'w+') as f:
-        f.write(atkn)
+        f.write(access_token)
 
 
 def login_request():
@@ -66,12 +67,25 @@ def login_request():
     data = res.json()
     if res.status_code == 200:
         rtkn = data['refresh_token']
-        atkn = data['access_token']
+        access_token = data['access_token']
         write_refresh_token(rtkn)
-        write_access_token(atkn)
-        return atkn
+        write_access_token(access_token)
+        return access_token
     else:
         raise AuthFailException(data['error'], res.status_code)
+
+
+def access_token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            access_token = login_request()
+            return f(access_token)
+        except AuthFailException as ex:
+            errmsg = '{}: {}'.format(ex.status_code, ex.msg)
+            click.echo(errmsg)
+
+    return decorated_function
 
 
 def refresh_request():
@@ -83,8 +97,8 @@ def refresh_request():
                         headers=header)
     data = res.json()
     if res.status_code == 200:
-        atkn = data['access_token']
-        write_access_token(atkn)
-        return atkn
+        access_token = data['access_token']
+        write_access_token(access_token)
+        return access_token
     else:
         raise AuthFailException('Error getting access token', res.status_code)
