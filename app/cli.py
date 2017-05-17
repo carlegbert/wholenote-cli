@@ -55,8 +55,12 @@ def write(title, content, append, prepend):
 
 @click.command()
 @click.argument('title')
-def edit(title):
-    click.echo('<open a note with $EDITOR and save it when that process ends')
+@access_token_required
+def edit(access_token, title):
+    note = note_detail(access_token, title)
+    edited = note.open_in_editor()
+    if edited:
+        note.update(access_token)
 
 
 cli.add_command(list)
