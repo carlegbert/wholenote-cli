@@ -15,7 +15,7 @@ def cli():
 
 @click.command()
 @access_token_required
-def list(access_token):
+def all(access_token):
     notes = get_notes(access_token)
     click.echo('{0} notes retrieved:'.format(len(notes)))
     for n in notes:
@@ -27,14 +27,16 @@ def list(access_token):
 @access_token_required
 def detail(access_token, title):
     note = get_note(access_token, title)
-    note.display()
+    if note:
+        note.display()
 
 
 @click.command()
 @click.argument('title')
 @access_token_required
 def delete(access_token, title):
-    delete_note(access_token, title)
+    if delete_note(access_token, title):
+        click.echo('Note {} deleted.'.format(title))
 
 
 @click.command()
@@ -58,11 +60,10 @@ def write(access_token, title, content, append, prepend):
     else:
         note.text = content
 
-    if note.text != old_text:
-        note.update(access_token)
-        click.echo('Note updated')
-    else:
+    if note.text == old_text:
         click.echo('Note not updated (no changes made)')
+    elif note.update(access_token):
+        click.echo(note.title_id+' updated succesfully.')
 
 
 @click.command()
@@ -75,7 +76,7 @@ def edit(access_token, title):
         note.update(access_token)
 
 
-cli.add_command(list)
+cli.add_command(all)
 cli.add_command(detail)
 cli.add_command(delete)
 cli.add_command(write)

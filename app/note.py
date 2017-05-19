@@ -1,11 +1,10 @@
 import click
-import json
 from os import environ
 import requests
 from subprocess import call
 import tempfile
 
-from app.auth import construct_bearer_header, refresh_request
+from .util import send_request
 
 
 class Note(object):
@@ -22,7 +21,8 @@ class Note(object):
         click.echo('title id: ' + self.title_id)
         click.echo('permanent ID:' + self.id)
         click.echo('-'*20)
-        click.echo(self.text)
+        txt = self.text if self.text else '<note text is empty>'
+        click.echo(txt)
 
     def open_in_editor(self):
         """Open file in editor specified by user's environment variable
@@ -41,74 +41,33 @@ class Note(object):
             return False
 
     def update(self, access_token, refresh_count=0):
-        header = construct_bearer_header(access_token)
         url = 'https://wholenoteapp.com/api/v1.0/notes/' + self.title_id
         data = {'title': self.title, 'text': self.text}
-        res = requests.put(url, headers=header, json=data)
-        res_data = res.json()
-        if res.status_code == 200:
-            click.echo(self.title_id+' updated succesfully.')
-            return res_data
-        elif refresh_count > 3:
-            click.echo('Error authenticating token. You may need to log in again.')
-        elif res.status_code == 422:
-            access_token = refresh_request()
-            refresh_count += 1
-            return self.update(access_token, refresh_count)
-        else:
-            click.echo('{0}: {1}'.format(res.status_code, res_data['msg']))
+        res = send_request(access_token, requests.put, url, data)
+        return res
 
 
 def get_notes(access_token, refresh_count=0):
     """Get all notes belonging to a user from server"""
-    header = construct_bearer_header(access_token)
-    res = requests.get('https://wholenoteapp.com/api/v1.0/notes',
-                       headers=header)
-    data = res.json()
-    if res.status_code == 200:
-        return [Note(**n) for n in data['notes']]
-        return data['notes']
-    elif refresh_count > 3:
-        click.echo('Error authenticating token. You may need to log in again.')
-    elif res.status_code == 422:
-        access_token = refresh_request()
-        refresh_count += 1
-        return get_notes({access_token: access_token}, refresh_count)
-    else:
-        click.echo('{0}: {1}'.format(res.status_code, data['msg']))
+    url = 'https://wholenoteapp.com/api/v1.0/notes'
+
+    payload = send_request(access_token, requests.get, url)
+    if payload:
+        return [Note(**n) for n in payload['notes']]
+    return None
 
 
 def get_note(access_token, title_id, refresh_count=0):
     """Get Note object from server"""
-    header = construct_bearer_header(access_token)
     url = 'https://wholenoteapp.com/api/v1.0/notes/' + title_id
-    res = requests.get(url, headers=header)
-    data = res.json()
-    if res.status_code == 200:
-        return Note(**data)
-    elif refresh_count > 3:
-        click.echo('Error authenticating token. You may need to log in again.')
-    elif res.status_code == 422:
-        access_token = refresh_request()
-        refresh_count += 1
-        return get_notes({access_token: access_token}, refresh_count)
-    else:
-        click.echo('{0}: {1}'.format(res.status_code, data['msg']))
+
+    payload = send_request(access_token, requests.get, url)
+    if payload:
+        return Note(**payload)
+    return None
 
 
 def delete_note(access_token, title_id, refresh_count=0):
     """Delete note from server"""
-    header = construct_bearer_header(access_token)
     url = 'https://wholenoteapp.com/api/v1.0/notes/' + title_id
-    res = requests.delete(url, headers=header)
-    data = res.json()
-    if res.status_code == 200:
-        click.echo('Note {0} deleted.'.format(title_id))
-    elif refresh_count > 3:
-        click.echo('Error authenticating token. You may need to log in again.')
-    elif res.status_code == 422:
-        access_token = refresh_request()
-        refresh_count += 1
-        return get_notes({access_token: access_token}, refresh_count)
-    else:
-        click.echo('{0}: {1}'.format(res.status_code, data['msg']))
+    return send_request(access_token, requests.delete, url)
