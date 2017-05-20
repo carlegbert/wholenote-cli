@@ -12,6 +12,6 @@ setup(
         ],
     entry_points='''
         [console_scripts]
-        wnote=app.cli:cli
+        wnote=wnote.cli:cli
     ''',
 )

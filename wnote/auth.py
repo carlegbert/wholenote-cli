@@ -4,7 +4,7 @@ from os import path
 import requests
 import click
 
-from app.exceptions import FailedRequestException
+from wnote.exceptions import FailedRequestException
 
 
 def construct_basic_header(email, password):
