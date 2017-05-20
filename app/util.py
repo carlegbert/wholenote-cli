@@ -4,7 +4,8 @@ from .exceptions import FailedRequestException
 
 def send_request(access_token, method, url, data=None, refresh_count=0):
     """ Send request and return data on success. Return None and display
-    error message on failure"""
+    error message on failure.
+    """
     header = construct_bearer_header(access_token)
 
     if data:

@@ -2,7 +2,7 @@ from click import echo
 from functools import wraps
 
 from .auth import login_request
-from .util import FailedRequestException
+from .exceptions import FailedRequestException
 
 
 def catch_failed_request(f):

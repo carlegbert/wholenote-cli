@@ -8,3 +8,11 @@ class FailedRequestException(Exception):
         self.errmsg = errmsg
         self.status_code = status_code
         self.pretty_message = '{0}: {1}'.format(status_code, errmsg)
+
+
+class MissingArgException(Exception):
+    """Exception raised when a command is missing an argument"""
+
+    def __init__(self, arg):
+        self.arg = arg
+        self.pretty_message = 'Error: missing argument ' + arg
