@@ -38,23 +38,20 @@ def delete(access_token, title):
 
 @click.command()
 @click.argument('title')
-@click.option('--append', is_flag=True)
-@click.option('--prepend', is_flag=True)
+@click.option('--write', 'operation_type', flag_value='write', default=True)
+@click.option('--append', 'operation_type', flag_value='append')
+@click.option('--prepend', 'operation_type', flag_value='prepend')
 @click.argument('content')
 @access_token_required
-def write(access_token, title, content, append, prepend):
-    if append and prepend:
-        click.echo("can't append and prepend")
-        return
-
-    note = get_single_note(access_token_required, title)
+def write(access_token, title, content, operation_type):
+    note = get_single_note(access_token, title)
     old_text = note.text
 
-    if append:
+    if operation_type == 'append':
         note.text += '\n' + content
-    elif prepend:
+    elif operation_type == 'prepend':
         note.text = content + '\n' + note.text
-    else:
+    elif operation_type == 'write':
         note.text = content
 
     if note.text == old_text:
