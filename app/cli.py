@@ -1,6 +1,6 @@
 import click
-from app.auth import access_token_required
-from app.note import (
+from .decorators import access_token_required, catch_failed_request
+from .note import (
         get_note,
         get_notes,
         delete_note,
@@ -15,6 +15,7 @@ def cli():
 
 @click.command()
 @access_token_required
+@catch_failed_request
 def all(access_token):
     notes = get_notes(access_token)
     click.echo('{0} notes retrieved:'.format(len(notes)))
@@ -25,18 +26,19 @@ def all(access_token):
 @click.command()
 @click.argument('title')
 @access_token_required
+@catch_failed_request
 def detail(access_token, title):
     note = get_note(access_token, title)
-    if note:
-        note.display()
+    note.display()
 
 
 @click.command()
 @click.argument('title')
 @access_token_required
+@catch_failed_request
 def delete(access_token, title):
-    if delete_note(access_token, title):
-        click.echo('Note {} deleted.'.format(title))
+    delete_note(access_token, title)
+    click.echo('Note {} deleted.'.format(title))
 
 
 @click.command()
@@ -45,6 +47,7 @@ def delete(access_token, title):
 @click.option('--prepend', is_flag=True)
 @click.argument('content')
 @access_token_required
+@catch_failed_request
 def write(access_token, title, content, append, prepend):
     if append and prepend:
         click.echo("can't append and prepend")
@@ -69,11 +72,11 @@ def write(access_token, title, content, append, prepend):
 @click.command()
 @click.argument('title')
 @access_token_required
+@catch_failed_request
 def edit(access_token, title):
     note = get_note(access_token, title)
-    edited = note.open_in_editor()
-    if edited:
-        note.update(access_token)
+    note.open_in_editor()
+    note.update(access_token)
 
 
 cli.add_command(all)

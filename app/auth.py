@@ -1,11 +1,10 @@
 from base64 import b64encode
-from functools import wraps
 from os import path
 
 import requests
 import click
 
-from app.exceptions import AuthFailException
+from app.exceptions import FailedRequestException
 
 
 def construct_basic_header(email, password):
@@ -73,19 +72,7 @@ def login_request():
         write_access_token(access_token)
         return access_token
     else:
-        raise AuthFailException(data['msg'], res.status_code)
-
-
-def access_token_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            access_token = login_request()
-            return f(access_token, *args, **kwargs)
-        except AuthFailException as ex:
-            click.echo(ex.pretty_message)
-
-    return decorated_function
+        raise FailedRequestException(res.status_code, data['msg'])
 
 
 def refresh_request():
@@ -101,4 +88,4 @@ def refresh_request():
         write_access_token(access_token)
         return access_token
     else:
-        raise AuthFailException('Error getting access token', res.status_code)
+        raise FailedRequestException(res.status_code, data['msg'])

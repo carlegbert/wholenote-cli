@@ -1,4 +1,4 @@
-import click
+from click import echo
 from os import environ
 import requests
 from subprocess import call
@@ -17,12 +17,12 @@ class Note(object):
         self.last_modified = lastModified
 
     def display(self):
-        click.echo('title: ' + self.title)
-        click.echo('title id: ' + self.title_id)
-        click.echo('permanent ID:' + self.id)
-        click.echo('-'*20)
+        echo('title: ' + self.title)
+        echo('title id: ' + self.title_id)
+        echo('permanent ID:' + self.id)
+        echo('-'*20)
         txt = self.text if self.text else '<note text is empty>'
-        click.echo(txt)
+        echo(txt)
 
     def open_in_editor(self):
         """Open file in editor specified by user's environment variable
@@ -35,10 +35,11 @@ class Note(object):
             call([ed, f.name])
             f.seek(0)
             new_text = f.read().decode('utf-8')
-            if new_text != self.text:
-                self.text = new_text
-                return True
-            return False
+
+        if new_text != self.text:
+            self.text = new_text
+            return True
+        return False
 
     def update(self, access_token, refresh_count=0):
         url = 'https://wholenoteapp.com/api/v1.0/notes/' + self.title_id
