@@ -1,5 +1,9 @@
 import click
-from .decorators import access_token_required, catch_failed_request
+from .decorators import (
+        access_token_required,
+        catch_failed_request,
+        load_config
+    )
 from .note import (
         get_single_note,
         get_all_notes,
@@ -16,8 +20,9 @@ def cli():
 
 @click.command()
 @click.argument('title', required=False)
+@load_config
 @access_token_required
-def get(access_token, title):
+def get(config, access_token, title):
     if not title:
         notes = get_all_notes(access_token)
         click.echo('{0} notes retrieved:'.format(len(notes)))
@@ -30,8 +35,9 @@ def get(access_token, title):
 
 @click.command()
 @click.argument('title')
+@load_config
 @access_token_required
-def delete(access_token, title):
+def delete(config, access_token, title):
     delete_note(access_token, title)
     click.echo('Note {} deleted.'.format(title))
 
@@ -42,8 +48,9 @@ def delete(access_token, title):
 @click.option('--append', 'operation_type', flag_value='append')
 @click.option('--prepend', 'operation_type', flag_value='prepend')
 @click.argument('content')
+@load_config
 @access_token_required
-def write(access_token, title, content, operation_type):
+def write(config, access_token, title, content, operation_type):
     note = get_single_note(access_token, title)
     old_text = note.text
 
@@ -62,8 +69,9 @@ def write(access_token, title, content, operation_type):
 
 @click.command()
 @click.argument('title')
+@load_config
 @access_token_required
-def edit(access_token, title):
+def edit(config, access_token, title):
     note = get_single_note(access_token, title)
     note.open_in_editor()
     note.update()

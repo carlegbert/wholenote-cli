@@ -40,11 +40,13 @@ def write_refresh_token(refresh_token):
         f.write(refresh_token)
 
 
-def login_request():
+def login_request(email, password):
     """Send login request and return WholenoteCredentials object on
     success. Raise exception on failure."""
-    email = click.prompt('email')
-    password = click.prompt('password', hide_input=True)
+    if not email:
+        email = click.prompt('email')
+    if not password:
+        password = click.prompt('password', hide_input=True)
     header = construct_basic_header(email, password)
     res = requests.post('https://wholenoteapp.com/api/v1.0/login',
                         headers=header)
