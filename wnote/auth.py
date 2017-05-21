@@ -1,10 +1,14 @@
 from base64 import b64encode
-from os import path
+from os import environ, makedirs, path
 
 import requests
 import click
 
 from wnote.exceptions import FailedRequestException
+
+
+WNOTE_LOCAL_DIR = path.join(environ['HOME'], '.local', 'wnote')
+REFRESH_TOKEN_LOC = path.join(WNOTE_LOCAL_DIR, 'rtkn')
 
 
 def construct_basic_header(email, password):
@@ -20,22 +24,19 @@ def construct_bearer_header(tkn):
 
 
 def read_refresh_token():
-    """Read refresh token from ~/.wnre"""
-    # TODO: Find a better place to store this.
-    # Probably .local/share/wnote/...
-    p = path.expanduser('~/.wnre')
-    try:
-        with open(p, 'r') as f:
-            tkn = f.readline()
-            return tkn
-    except FileNotFoundError:
-        return None
+    """Write refresh token to file. FileNotFound exception will be
+    thrown if file doesn't exist and should be caught any time this
+    function is called."""
+    with open(REFRESH_TOKEN_LOC, 'r') as f:
+        tkn = f.readline()
+        return tkn
 
 
 def write_refresh_token(refresh_token):
-    """Read refresh token from ~/.wnre"""
-    p = path.expanduser('~/.wnre')
-    with open(p, 'w+') as f:
+    """Read refresh token from file"""
+    if not path.exists(WNOTE_LOCAL_DIR):
+        makedirs(WNOTE_LOCAL_DIR)
+    with open(REFRESH_TOKEN_LOC, 'w+') as f:
         f.write(refresh_token)
 
 
@@ -44,15 +45,12 @@ def login_request():
     success. Raise exception on failure."""
     email = click.prompt('email')
     password = click.prompt('password', hide_input=True)
-    click.echo('+'*20)
     header = construct_basic_header(email, password)
     res = requests.post('https://wholenoteapp.com/api/v1.0/login',
                         headers=header)
     payload = res.json()
     if res.status_code == 200:
-        refresh_token = payload['refresh_token']
         access_token = payload['access_token']
-        write_refresh_token(refresh_token)
         return access_token
     else:
         raise FailedRequestException(res.status_code, payload['msg'])
@@ -60,8 +58,11 @@ def login_request():
 
 def refresh_request():
     """Use refresh token to get useable access token."""
-    click.echo('Access token timed out... making refresh request')
-    refresh_token = read_refresh_token()
+    try:
+        refresh_token = read_refresh_token()
+    except FileNotFoundError:
+        return None
+
     header = construct_bearer_header(refresh_token)
     res = requests.post('https://wholenoteapp.com/api/v1.0/refresh',
                         headers=header)
