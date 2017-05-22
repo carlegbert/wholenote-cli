@@ -1,3 +1,5 @@
+from os import environ, path
+
 import click
 from .config import Config
 from .decorators import (
@@ -11,12 +13,16 @@ from .note import (
     )
 
 
+CFG_FILE = path.join(environ['HOME'], '.config', 'wnote', 'config.ini')
+
+
 @click.group()
+@click.option('--config-file', default=CFG_FILE)
 @catch_failed_request
 @click.pass_context
-def cli(ctx):
+def cli(ctx, config_file):
     """entry point"""
-    ctx.obj = Config.from_file()
+    ctx.obj = Config.from_file(config_file)
 
 
 @click.command()

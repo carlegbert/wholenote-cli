@@ -23,6 +23,7 @@ def access_token_required(f):
         password = config.password
         try:
             access_token = login_request(email, password)
+            echo('Login for {0} successful'.format(email))
             return f(config=config, access_token=access_token, *args, **kwargs)
         except FailedRequestException as ex:
             return echo(ex.pretty_message)

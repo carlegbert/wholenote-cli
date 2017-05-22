@@ -1,6 +1,8 @@
 from configparser import ConfigParser
 from os import path, environ, makedirs
 
+from click import echo
+
 
 CFG_DIR = path.join(environ['HOME'], '.config', 'wnote')
 CFG_FILE = path.join(CFG_DIR, 'config.ini')
@@ -28,12 +30,12 @@ class Config(object):
         to instantiate a Config object. Takes optional filepath
         argument that allows a different configuration file to
         be loaded (for testing)"""
-        file_options = ConfigParser()
-        try:
-            file_options.read(filepath)
-            return Config(file_options)
-        except FileNotFoundError:
-            return Config(file_options)
+        expfilepath = path.expanduser(filepath)
+        if not path.exists(expfilepath):
+            echo('No configuration file found at '+expfilepath)
+        config_options = ConfigParser()
+        config_options.read(expfilepath)
+        return Config(config_options)
 
 
 def create_config_file(directory=CFG_DIR, basename='config.ini'):
