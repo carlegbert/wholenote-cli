@@ -80,8 +80,13 @@ def write(config, access_token, title, content, operation_type):
 @access_token_required
 def edit(config, access_token, title):
     note = get_single_note(access_token, title)
-    note.open_in_editor()
-    note.update()
+    old_text = note.text
+    note.open_in_editor(config.editor)
+    if note.text == old_text:
+        click.echo('Note not updated (no changes made)')
+    elif note.save(access_token):
+        click.echo(note.title_id+' updated succesfully.')
+    note.save(access_token)
 
 
 cli.add_command(get)

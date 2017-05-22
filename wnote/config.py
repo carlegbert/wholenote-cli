@@ -24,6 +24,10 @@ class Config(object):
     def password(self):
         return self.options.get('USER', 'password', fallback='')
 
+    @property
+    def editor(self):
+        return self.options.get('GENERAL', 'editor', fallback='')
+
     @classmethod
     def from_file(cls, filepath=CFG_FILE):
         """Load configuration options from CFG_FILE and use them

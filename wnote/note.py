@@ -24,11 +24,12 @@ class Note(object):
             echo('-'*20)
         echo(self.text)
 
-    def open_in_editor(self):
+    def open_in_editor(self, editor=None):
         """Open file in editor specified by user's environment variable
         (defaults to nano). Returns true if text is changed, false if not.
         """
-        editor = environ.get('EDITOR', 'nano')
+        if not editor:
+            editor = environ.get('EDITOR', 'nano')
         with tempfile.NamedTemporaryFile(suffix='.tmp') as f:
             f.write(self.text.encode())
             f.flush()
