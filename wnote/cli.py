@@ -1,8 +1,8 @@
 import click
+from .config import Config
 from .decorators import (
         access_token_required,
-        catch_failed_request,
-        load_config
+        catch_failed_request
     )
 from .note import (
         get_single_note,
@@ -13,14 +13,15 @@ from .note import (
 
 @click.group()
 @catch_failed_request
-def cli():
+@click.pass_context
+def cli(ctx):
     """entry point"""
-    pass
+    ctx.obj = Config.from_file()
 
 
 @click.command()
 @click.argument('title', required=False)
-@load_config
+@click.pass_obj
 @access_token_required
 def get(config, access_token, title):
     if not title:
@@ -35,7 +36,7 @@ def get(config, access_token, title):
 
 @click.command()
 @click.argument('title')
-@load_config
+@click.pass_obj
 @access_token_required
 def delete(config, access_token, title):
     delete_note(access_token, title)
@@ -48,7 +49,7 @@ def delete(config, access_token, title):
 @click.option('--append', 'operation_type', flag_value='append')
 @click.option('--prepend', 'operation_type', flag_value='prepend')
 @click.argument('content')
-@load_config
+@click.pass_obj
 @access_token_required
 def write(config, access_token, title, content, operation_type):
     note = get_single_note(access_token, title)
@@ -69,7 +70,7 @@ def write(config, access_token, title, content, operation_type):
 
 @click.command()
 @click.argument('title')
-@load_config
+@click.pass_obj
 @access_token_required
 def edit(config, access_token, title):
     note = get_single_note(access_token, title)

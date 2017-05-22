@@ -2,7 +2,6 @@ from click import echo
 from functools import wraps
 
 from .auth import login_request
-from .config import Config
 from .exceptions import FailedRequestException
 
 
@@ -27,14 +26,5 @@ def access_token_required(f):
             return f(config=config, access_token=access_token, *args, **kwargs)
         except FailedRequestException as ex:
             return echo(ex.pretty_message)
-
-    return decorated_function
-
-
-def load_config(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        config = Config.from_file()
-        return f(config=config, *args, **kwargs)
 
     return decorated_function
