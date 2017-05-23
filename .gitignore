@@ -1,2 +1,4 @@
 venv/
 *.egg-info/
+.cache
+test_config.ini
