@@ -13,7 +13,7 @@ def send_request(access_token, method, url, data=None, refresh_count=0):
     else:
         res = method(url, headers=header)
 
-    if res.status_code == 200:
+    if 200 <= res.status_code < 300:
         return res.json()
     elif refresh_count > 3:
         raise FailedRequestException(res.status_code, 'Error authenticating \

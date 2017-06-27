@@ -7,9 +7,11 @@ from .decorators import (
         catch_failed_request
     )
 from .note import (
+        create_note,
+        delete_note,
         get_single_note,
         get_all_notes,
-        delete_note,
+        update_title,
     )
 
 
@@ -71,7 +73,7 @@ def write(config, access_token, title, content, operation_type):
     if note.text == old_text:
         click.echo('Note not updated (no changes made)')
     elif note.save(access_token):
-        click.echo(note.title_id+' updated succesfully.')
+        click.echo(note.title_id+' updated successfully.')
 
 
 @click.command()
@@ -85,11 +87,32 @@ def edit(config, access_token, title):
     if note.text == old_text:
         click.echo('Note not updated (no changes made)')
     elif note.save(access_token):
-        click.echo(note.title_id+' updated succesfully.')
+        click.echo(note.title_id+' updated successfully.')
     note.save(access_token)
+
+
+@click.command()
+@click.argument('title')
+@click.pass_obj
+@access_token_required
+def new(config, access_token, title):
+    note = create_note(access_token, title)
+    click.echo('note '+note.title+' created successfully')
+
+
+@click.command()
+@click.argument('title')
+@click.argument('new_title')
+@click.pass_obj
+@access_token_required
+def newtitle(config, access_token, title, new_title):
+    note = update_title(access_token, title, new_title)
+    click.echo('note '+title+' renamed to '+note.title)
 
 
 cli.add_command(get)
 cli.add_command(delete)
 cli.add_command(write)
 cli.add_command(edit)
+cli.add_command(new)
+cli.add_command(newtitle)

@@ -72,3 +72,21 @@ def delete_note(access_token, title_id):
     """Delete note from server"""
     url = 'https://wholenoteapp.com/api/v1.0/notes/' + title_id
     return send_request(access_token, requests.delete, url)
+
+
+def create_note(access_token, title):
+    url = 'https://wholenoteapp.com/api/v1.0/notes'
+    data = {'title': title, 'text': ''}
+    payload = send_request(access_token, requests.post, url, data)
+    if payload:
+        return Note(**payload['note'])
+    return None
+
+
+def update_title(access_token, title_id, new_title):
+    url = 'https://wholenoteapp.com/api/v1.0/notes/' + title_id
+    data = {'title': new_title}
+    payload = send_request(access_token, requests.put, url, data)
+    if payload:
+        return Note(**payload['note'])
+    return None
